@@ -1,8 +1,65 @@
-;;;###autoload
-(defun sql-duckdb (&optional buffer)
-  "Run duckdb as an inferior process.
+;; DuckDB interpreter support for sql-interactive-mode
 
-Taken from: https://github.com/duckdb/duckdb/discussions/8099
+;; This is copied from sqlite interpreter support in sql.el.
+
+;; I had to add this in .emacs on my Windows machine to fix the continuation prompt.
+;; (add-to-list 'process-coding-system-alist '("[dD]uck[dD][bB]" . utf-8-unix))
+
+;; License: GPL, like emacs and sql.el
+
+(require 'sql)
+
+(defvar sql-duckdb-program "duckdb"
+  "Path to the DuckDB CLI executable.
+
+On Windows installed with WinGet, use
+c:/Users/USERID/AppData/Local/Microsoft/WinGet/Links/duckdb.exe.")
+
+(defcustom sql-duckdb-options '("-interactive")
+  "List of additional options for `sql-duckdb-program'."
+  :type '(repeat string)
+  :version "20.8")
+
+(defcustom sql-duckdb-login-params '((database :file nil
+                                               :must-match confirm))
+  "List of login parameters needed to connect to DuckDB."
+  :type 'sql-login-params
+  :version "26.1")
+
+(defun sql-comint-duckdb (product options &optional buf-name)
+  "Create comint buffer and connect to DuckDB."
+  ;; Put all parameters to the program (if defined) in a list and call
+  ;; make-comint.
+  (let ((params
+         (append options
+                 (if (not (string= "" sql-database))
+                     `(,(expand-file-name sql-database))))))
+    (sql-comint product params buf-name)))
+
+(defun sql-duckdb-completion-object (sqlbuf _schema)
+  ;; FIXME: make duckdb-specific
+  (sql-redirect-value sqlbuf ".tables" "\\sw\\(?:\\sw\\|\\s_\\)*" 0))
+
+(add-to-list 'sql-product-alist
+             '(duckdb
+               :name "DuckDB"
+               :free-software t
+               :font-lock sql-mode-duckdb-font-lock-keywords
+               :sqli-program sql-duckdb-program
+               :sqli-options sql-duckdb-options
+               :sqli-login sql-duckdb-login-params
+               :sqli-comint-func sql-comint-duckdb
+               :list-all ".tables"      ;; FIXME
+               :list-table ".schema %s" ;; FIXME
+               :completion-object sql-duckdb-completion-object
+               :prompt-regexp "^D "
+               :prompt-length 2
+               :prompt-cont-regexp "^· "))
+
+(defun sql-duckdb (&optional buffer)
+  "Run DuckDB as an inferior process.
+
+DuckDB is free software.
 
 If buffer `*SQL*' exists but no process is running, make a new process.
 If buffer exists and a process is running, just switch to buffer
@@ -31,44 +88,8 @@ The default comes from `process-coding-system-alist' and
 \(Type \\[describe-mode] in the SQL buffer for a list of commands.)"
   (interactive "P")
   (sql-product-interactive 'duckdb buffer))
-(defun sql-duckdb-completion-object (sqlbuf _schema)
-  (sql-redirect-value sqlbuf "show tables" "^\\(\\sw\\(?:\\sw\\|\\s_\\)*\\)," 1))
 
-(defcustom sql-duckdb-program (or (executable-find "duckdb")
-                                  "duckdb")
-  "Command to start duckdub.
-
-Starts `sql-interactive-mode' after doing some setup."
-  :type 'file
-  :group 'SQL)
-
-(defcustom sql-duckdb-options nil
-  "List of additional options for `sql-duckdb-program'."
-  :type '(repeat string)
-  :version "20.8" ;; FIXME: What is this?
-  :group 'SQL)
-
-(defcustom sql-duckdb-login-params '((database :file nil
-                                               :must-match confirm))
-  "List of login parameters needed to connect to duckdb."
-  :type 'sql-login-params
-  :version "26.1"
-  :group 'SQL)
-
-(add-to-list 'sql-product-alist
-             '(duckdb
-               :name "duckdb"
-               :free-software nil
-               :font-lock sql-mode-sqlite-font-lock-keywords  ;; Use sqlite for now
-               :sqli-program sql-duckdb-program
-               :sqli-options sql-duckdb-options
-               :sqli-login sql-duckdb-login-params
-               :sqli-comint-func sql-comint-sqlite
-               :list-all "show tables"
-               :list-table "describe %s"
-               :completion-object sql-duckdb-completion-object
-               :prompt-regexp "^D "
-               :prompt-length 2
-               :prompt-cont-regexp "^> "))
+;; FIXME
+(defvar sql-mode-duckdb-font-lock-keywords sql-mode-postgres-font-lock-keywords)
 
 (provide 'sql-duckdb)
