@@ -24,7 +24,7 @@
 (setopt use-package-always-demand (daemonp))
 
 ;; TIP: uncomment and use (use-package-report) after startup
-(setopt use-package-compute-statistics t)
+;; (setopt use-package-compute-statistics t)
 
 (use-package emacs
   :ensure nil
@@ -64,84 +64,79 @@
    (text-mode . visual-line-mode))
 
   :bind
-  ( :map global-map
-    ("C-x C-b" . ibuffer)
-    ("C-x k" . gk-kill-buffer)
-    ("M-o" . gk-other-window)
-    ("M-/" . hippie-expand)
-    ;; these two worked mostly OK, but they have issues in some modes
-    ;; ("C-c C-c" . kill-ring-save)
-    ;; ("C-v" . yank)
-    ("M-n" . scroll-up-command)
-    ("M-p" . scroll-down-command)
-    ("C-c r" . raise-sexp)
-    ("C-c s" . gk-slurp-sexp)
-    ("C-; C-p" . delete-indentation)
-    ("C-; C-n" . gk-delete-indentation-forward))
+  (("C-x C-b" . ibuffer)
+   ("C-x k" . gk-kill-buffer)
+   ("M-o" . gk-other-window)
+   ("M-/" . hippie-expand)
+   ("M-n" . scroll-up-command)
+   ("M-p" . scroll-down-command)
+   ("C-c r" . raise-sexp)
+   ("C-c s" . gk-slurp-sexp)
+   ("C-; C-p" . delete-indentation)
+   ("C-; C-n" . gk-delete-indentation-forward))
 
-  :config
+  :custom
+  (tool-bar-mode nil)
+  (scroll-bar-mode nil)
+  (menu-bar-mode nil "M-` still useable to explore new modes' menus")
 
-  ;; (global-visual-wrap-prefix-mode 1)
+  (visible-bell t)
+  (column-number-mode t)
+  (inhibit-splash-screen t)
+  (use-dialog-box nil "Don't pop up UI dialogs when prompting")
   
-  (when (display-graphic-p)
-    (keymap-global-set "C-z" 'undo)
-    ;; (define-key key-translation-map (kbd "ESC") (kbd "C-g")) ; ESC ESC ESC issues!
-    )
-
-  (when (eq system-type 'windows-nt)
-    (setq grep-command "rg -nS --no-heading "
-          grep-use-null-device nil))
-
-  (setq-default truncate-lines t) ; By default, don't wrap lines.
-
-  ;; [tool/menu/scroll]-bar-mode configured in early-init.el
-  (setq visible-bell t)
-  (setq column-number-mode t)
-  (setq inhibit-splash-screen t)
-  (setq use-dialog-box nil) ; Don't pop up UI dialogs when prompting
-
-  (recentf-mode 1)
-  (save-place-mode 1)
-
-  (winner-mode 1)
-  
-  (setq history-length 25)
+  (winner-mode t)
+  (save-place-mode t)
+  (recentf-mode t)
+  (history-length 25)
 
   ;; vertico recommended
-  (setq context-menu-mode t
-        enable-recursive-minibuffers t
-        read-extended-command-predicate #'command-completion-default-include-p
-        minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
+  (context-menu-mode t)
+  (enable-recursive-minibuffers t)
+  (read-extended-command-predicate #'command-completion-default-include-p)
+  (minibuffer-prompt-properties '(read-only t cursor-intangible t face minibuffer-prompt))
 
-  (global-auto-revert-mode 1) ; Watch/refresh buffer if file is changed elsewhere
-  (setq global-auto-revert-non-file-buffers t) ; same for Dired and other buffers
+  (global-auto-revert-mode t "Watch/refresh buffer if file is changed elsewhere")
+  (global-auto-revert-non-file-buffers t "Auto-revert Dired and other buffers")
 
-  (setq ispell-program-name "aspell")
-  
-  (setq backup-directory-alist ; anti-littering
-        `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
-  (setq custom-file (locate-user-emacs-file "custom-vars.el"))
-  (load custom-file 'noerror 'nomessage) ; unclutter init.el
-  
   ;; Selectively taken from technomancy better-defaults.el
+  (save-interprogram-paste-before-kill t)
+  (apropos-do-all t)
+  (mouse-yank-at-point t)
+  (require-final-newline t)
+  (load-prefer-newer t)
+  (backup-by-copying t)
+  (frame-inhibit-implied-resize t)
+  (read-file-name-completion-ignore-case t)
+  (read-buffer-completion-ignore-case t)
+  (completion-ignore-case t)
+  (ediff-window-setup-function 'ediff-setup-windows-plain)
+
+  :config
+  (when (display-graphic-p)
+    (keymap-global-set "C-z" 'undo))
+
+  (when (eq system-type 'windows-nt)
+    (setopt grep-command "rg -nS --no-heading "
+            grep-use-null-device nil
+            ispell-program-name "aspell"))
+
+  (setq-default truncate-lines t) ; By default, don't wrap lines.
   (setq-default indent-tabs-mode nil)
-  (setq save-interprogram-paste-before-kill t
-        apropos-do-all t
-        mouse-yank-at-point t
-        require-final-newline t
-        load-prefer-newer t
-        backup-by-copying t
-        frame-inhibit-implied-resize t
-        read-file-name-completion-ignore-case t
-        read-buffer-completion-ignore-case t
-        completion-ignore-case t
-        ediff-window-setup-function 'ediff-setup-windows-plain)
+
+  ;; Stop littering folders with backup files
+  (setopt backup-directory-alist
+          `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
+
+  ;; Unclutter init.el from UI initiated customizations
+  (setq custom-file (locate-user-emacs-file "custom-vars.el"))
+  (load custom-file 'noerror 'nomessage)
 
   (progn (set-language-environment "UTF-8")
-         (setq default-input-method nil)) ; see doom emacs
-  
-  (add-to-list 'default-frame-alist
-               '(font . "Fira Code Retina 10"))
+         (setopt default-input-method nil)) ; see doom emacs
+
+  (add-to-list 'default-frame-alist '(font . "Fira Code Retina 10"))
+
   ) ; end `use-package emacs` ;;;;;;;;;;;;;;;;;;;;
 
 (use-package modus-themes
@@ -163,7 +158,6 @@
   :ensure t)
 
 (use-package magit
-  ;; :after (transient)
   :ensure t
   :init
   (defun gk-compare-cl-json ()
@@ -180,12 +174,13 @@ auto-updating fields)"
 (use-package hideshow
   :ensure nil
   :hook (prog-mode . hs-minor-mode)
-  :bind ( :map hs-minor-mode-map
-          ("C-; C-f" . hs-toggle-hiding)))
+  :bind (:map hs-minor-mode-map
+              ("C-; C-f" . hs-toggle-hiding)))
 
 (use-package outline
   :ensure nil
-  :hook (prog-mode . outline-minor-mode))
+  :hook (prog-mode . outline-minor-mode)
+  :custom (outline-minor-mode-cycle t))
 
 (use-package orderless
   :ensure t
@@ -206,21 +201,22 @@ auto-updating fields)"
 
 (use-package marginalia
   :ensure t
-  :config
-  (marginalia-mode 1))
+  :init
+  (marginalia-mode))
 
 (use-package consult
   :ensure t
   :bind (("C-x b" . consult-buffer) ; orig. switch-to-buffer
          )
   :custom
-  (completion-in-region-function #'consult-completion-in-region)
+  (completion-in-region-function #'consult-completion-in-region
+                                 "I have replaced company with this. Might not work well with lsp.")
   (tab-always-indent 'complete))
 
 (use-package paren-face
   :ensure t
-  :config
-  (global-paren-face-mode 1))
+  :custom
+  (global-paren-face-mode t))
 
 (use-package expand-region
   :ensure t
@@ -248,11 +244,10 @@ auto-updating fields)"
 
 (use-package cider
   :ensure t
-  :config
-  (define-key cider-mode-map (kbd "C-c C-c") nil) ; so it remains 'copy'
-  (setq cider-use-tooltips nil
-        cider-download-java-sources t
-        cider-enable-nrepl-jvmti-agent t))
+  :custom
+  (cider-use-tooltips nil)
+  (cider-download-java-sources t)
+  (cider-enable-nrepl-jvmti-agent t))
 
 (use-package clj-deps-new
   :ensure t)
