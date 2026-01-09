@@ -1,17 +1,21 @@
 ;;; init.el --- Custom init file -*- lexical-binding: t; -*-
-
 ;;; Commentary:
-;; Built bit-by-bit, parts of it after trying out things
-;; like technomancy better defaults.
+
+;; Built bit-by-bit, parts of it after trying out things like
+;; technomancy better defaults.  Most configurations were moved to
+;; use-package :custom, and those that are left left with `setq' or
+;; `setq-default' are intentional, for the latter to indicate that the
+;; variable would otherwise be buffer-local.
 
 ;;; Code:
+;;; Startup, elpaca, and use-package setup
+
 ;; Doom Emacs inspired startup-time improvement (reverted at the end)
 (progn (defvar last-file-name-handler-alist file-name-handler-alist)
        (setq gc-cons-threshold 402653184
              gc-cons-percentage 0.6
              file-name-handler-alist nil))
 
-;; Setup
 (add-to-list 'load-path (expand-file-name "settings" user-emacs-directory))
 
 ;; Load the Elpaca installer, and install use-package support
@@ -25,6 +29,8 @@
 
 ;; TIP: uncomment and use (use-package-report) after startup
 ;; (setopt use-package-compute-statistics t)
+
+;;; General `emacs'
 
 (use-package emacs
   :ensure nil
@@ -58,6 +64,8 @@
 
   (defun gk-delete-indentation-forward () (interactive) (delete-indentation t))
 
+;;;; Hooks and bindings
+
   :hook
   ((prog-mode . electric-pair-mode)
    (prog-mode . display-line-numbers-mode)
@@ -74,6 +82,8 @@
    ("C-c s" . gk-slurp-sexp)
    ("C-; C-p" . delete-indentation)
    ("C-; C-n" . gk-delete-indentation-forward))
+  
+;;;; Custom
 
   :custom
   (tool-bar-mode nil)
@@ -112,8 +122,11 @@
   (completion-ignore-case t)
   (ediff-window-setup-function 'ediff-setup-windows-plain)
 
+;;;; Conditional and other config
+  ;; (which aren't suited to :custom)
+  
   :config
-  (when (display-graphic-p)
+  (when (or (daemonp) (display-graphic-p))
     (keymap-global-set "C-z" 'undo))
 
   (when (eq system-type 'windows-nt)
@@ -121,14 +134,14 @@
             grep-use-null-device nil
             ispell-program-name "aspell"))
 
-  (setq-default truncate-lines t) ; By default, don't wrap lines.
+  (setq-default truncate-lines t) ; By default, don't wrap lines
   (setq-default indent-tabs-mode nil)
 
   ;; Stop littering folders with backup files
   (setopt backup-directory-alist
           `(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
 
-  ;; Unclutter init.el from UI initiated customizations
+  ;; Unclutter init.el from UI-initiated customizations
   (setq custom-file (locate-user-emacs-file "custom-vars.el"))
   (load custom-file 'noerror 'nomessage)
 
@@ -137,7 +150,18 @@
 
   (add-to-list 'default-frame-alist '(font . "Fira Code Retina 10"))
 
-  ) ; end `use-package emacs` ;;;;;;;;;;;;;;;;;;;;
+  ) ;; end `use-package emacs` ;;;;
+
+;;; Package-specific
+
+(use-package dired
+  :ensure nil
+  :custom
+  (ls-lisp-dirs-first t)
+  (dired-kill-when-opening-new-dired-buffer t "Do not creat a separate buffer for each folder.")
+  :config
+  ;; Don't complain about this command (a) being disabled when we use it
+  (put 'dired-find-alternate-file 'disabled nil))
 
 (use-package modus-themes
   :ensure t
@@ -180,7 +204,10 @@ auto-updating fields)"
 (use-package outline
   :ensure nil
   :hook (prog-mode . outline-minor-mode)
-  :custom (outline-minor-mode-cycle t))
+  :custom
+  (outline-minor-mode-cycle t "On headings (S-)TAB behaves like in [org/outline]-mode")
+  :config
+  (set-display-table-slot standard-display-table 'selective-display (string-to-vector " ↘")))
 
 (use-package orderless
   :ensure t
@@ -252,10 +279,6 @@ auto-updating fields)"
 (use-package clj-deps-new
   :ensure t)
 
-(use-package adjust-parens
-  :ensure t
-  :hook (emacs-lisp-mode clojure-mode))
-
 (use-package aggressive-indent
   :ensure t
   :hook (emacs-lisp-mode clojure-mode))
@@ -264,7 +287,7 @@ auto-updating fields)"
   :ensure t
   :hook (ess-r-mode . outline-minor-mode))
 
-;; Revert of Doom emacs inspired start-up time improvement:
+;;; Revert Doom emacs inspired temp start-up config:
 ;; after startup, it is important you reset this to some reasonable default
 ;; A large gc-cons-threshold will cause freezing and stuttering during
 ;; long-term interactive use. I find these are nice defaults:
@@ -273,7 +296,5 @@ auto-updating fields)"
             (setq gc-cons-threshold 16777216
                   gc-cons-percentage 0.1
                   file-name-handler-alist last-file-name-handler-alist)))
-(put 'dired-find-alternate-file 'disabled nil)
-
 ;; (provide 'init)
 ;;; init.el ends here
