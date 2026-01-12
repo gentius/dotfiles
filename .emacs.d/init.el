@@ -160,6 +160,7 @@
   (ls-lisp-dirs-first t)
   (dired-kill-when-opening-new-dired-buffer t "Do not creat a separate buffer for each folder.")
   :config
+  (unbind-key "M-o" dired-mode-map) ; originally opens file and closes all windows
   ;; Don't complain about this command (a) being disabled when we use it
   (put 'dired-find-alternate-file 'disabled nil))
 
