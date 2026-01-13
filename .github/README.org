@@ -9,7 +9,7 @@
   echo ".dotfiles" >> .gitignore
   git clone --bare https://www.github.com/gentius/dotfiles.git $HOME/.dotfiles
   dotfiles checkout
-  # rename/backup existing (identically named) files if the chekout returns an error
+  # rename/backup existing (identically named) files if the checkout returns an error
   dotfiles config --local status.showUntrackedFiles no
 #+end_src
 
