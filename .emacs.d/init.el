@@ -130,7 +130,9 @@
     (keymap-global-set "C-z" 'undo))
 
   (when (eq system-type 'windows-nt)
-    (setopt grep-command "rg -nS --no-heading "
+    (setopt grep-command "rg -nS --no-heading  ."
+            grep-command-position 21
+            find-program "c:/users/g.krasniqi/scoop/shims/find.exe"            
             grep-use-null-device nil
             ispell-program-name "aspell"))
 
